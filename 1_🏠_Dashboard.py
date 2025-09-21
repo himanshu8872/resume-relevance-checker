@@ -64,44 +64,48 @@ except Exception as e:
 
 # In 1_🏠_Dashboard.py, add this at the very end
 
+# In 1_🏠_Dashboard.py, replace the Danger Zone section with this
+
 st.divider()
 st.subheader("⚠️ Danger Zone")
 
 col1, col2 = st.columns(2)
 with col1:
-    # Check if jobs_df exists and is not empty
     if 'jobs_df' in locals() and jobs_df is not None and not jobs_df.empty:
         st.write("Delete a Job Description")
-        job_to_delete = st.selectbox("Select Job", options=jobs_df['display'], index=None, placeholder="Choose a job to delete...")
+        # The selectbox now uses a key to hold its state
+        job_to_delete_display = st.selectbox("Select Job", options=jobs_df['display'], key="job_select")
+
         if st.button("Delete Job"):
-            if job_to_delete:
-                job_id = jobs_df[jobs_df['display'] == job_to_delete]['id'].iloc[0]
+            if job_to_delete_display:
+                job_id = jobs_df[jobs_df['display'] == job_to_delete_display]['id'].iloc[0]
                 try:
                     conn = sqlite3.connect(DB_NAME)
                     conn.execute("PRAGMA foreign_keys = ON")
                     conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
                     conn.commit()
                     conn.close()
-                    st.success(f"Deleted '{job_to_delete}' successfully!")
+                    st.success(f"Deleted '{job_to_delete_display}' successfully!")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Failed to delete job: {e}")
 
 with col2:
-    # Check if resumes_df exists and is not empty
     if 'resumes_df' in locals() and resumes_df is not None and not resumes_df.empty:
         st.write("Delete a Resume")
-        resume_to_delete = st.selectbox("Select Resume", options=resumes_df['display'], index=None, placeholder="Choose a resume to delete...")
+        # The selectbox now uses a key to hold its state
+        resume_to_delete_display = st.selectbox("Select Resume", options=resumes_df['display'], key="resume_select")
+
         if st.button("Delete Resume"):
-            if resume_to_delete:
-                resume_id = resumes_df[resumes_df['display'] == resume_to_delete]['id'].iloc[0]
+            if resume_to_delete_display:
+                resume_id = resumes_df[resumes_df['display'] == resume_to_delete_display]['id'].iloc[0]
                 try:
                     conn = sqlite3.connect(DB_NAME)
                     conn.execute("PRAGMA foreign_keys = ON")
                     conn.execute("DELETE FROM resumes WHERE id = ?", (resume_id,))
                     conn.commit()
                     conn.close()
-                    st.success(f"Deleted '{resume_to_delete}' successfully!")
+                    st.success(f"Deleted '{resume_to_delete_display}' successfully!")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Failed to delete resume: {e}")

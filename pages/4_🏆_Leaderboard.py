@@ -42,6 +42,33 @@ try:
                 leaderboard_df.index = leaderboard_df.index + 1
                 leaderboard_df.rename_axis('Rank', inplace=True)
                 st.dataframe(leaderboard_df, use_container_width=True)
+
+                # --- CORRECTED DELETE SECTION ---
+                if not leaderboard_df.empty:
+                    st.write("---")
+                    st.subheader("Delete an Evaluation")
+                    
+                    eval_to_delete_name = st.selectbox("Select a candidate evaluation to remove:", options=leaderboard_df['candidate_name'], key="eval_select")
+                    
+                    if st.button("Delete Evaluation"):
+                        if eval_to_delete_name:
+                            # We need the full resumes list to find the ID from the name
+                            resumes_data_for_delete = conn.execute("SELECT id, candidate_name FROM resumes").fetchall()
+                            resumes_df_for_delete = pd.DataFrame(resumes_data_for_delete, columns=['id', 'name'])
+
+                            resume_id_to_delete = resumes_df_for_delete[resumes_df_for_delete['name'] == eval_to_delete_name]['id'].iloc[0]
+                            
+                            try:
+                                # Re-open connection for writing
+                                conn_del = sqlite3.connect(DB_NAME)
+                                conn_del.execute("DELETE FROM evaluations WHERE job_id = ? AND resume_id = ?", (int(selected_job_id), int(resume_id_to_delete)))
+                                conn_del.commit()
+                                conn_del.close()
+                                st.success(f"Deleted evaluation for '{eval_to_delete_name}' successfully!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Failed to delete evaluation: {e}")
+
     conn.close()
 
 except Exception as e:
