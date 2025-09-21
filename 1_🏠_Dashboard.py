@@ -38,6 +38,8 @@ try:
         jobs_data = cursor.execute("SELECT id, title, company FROM jobs ORDER BY id DESC LIMIT 5").fetchall()
         if jobs_data:
             jobs_df = pd.DataFrame(jobs_data, columns=['id', 'title', 'company'])
+            # ADD THIS LINE BACK IN
+            jobs_df['display'] = jobs_df['title'] + " at " + jobs_df.get('company', '')
             st.dataframe(jobs_df, use_container_width=True)
         else:
             st.info("No jobs have been added yet.")
@@ -47,6 +49,8 @@ try:
         resumes_data = cursor.execute("SELECT id, candidate_name, email FROM resumes ORDER BY id DESC LIMIT 5").fetchall()
         if resumes_data:
             resumes_df = pd.DataFrame(resumes_data, columns=['id', 'name', 'email'])
+            # AND ADD THIS LINE BACK IN
+            resumes_df['display'] = resumes_df['name']
             st.dataframe(resumes_df, use_container_width=True)
         else:
             st.info("No resumes have been added yet.")
