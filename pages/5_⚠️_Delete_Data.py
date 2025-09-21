@@ -24,19 +24,16 @@ try:
     # --- Delete Job Section ---
     if not jobs_df.empty:
         st.subheader("Delete a Job Description")
-        st.selectbox("Select Job", options=jobs_df['display'], key="job_to_delete", index=None, placeholder="Choose a job to delete...")
-        
+        job_to_delete_display = st.selectbox("Select Job", options=jobs_df['display'], key="job_to_delete", index=None, placeholder="Choose a job to delete...")
         if st.button("Delete Job"):
-            # **THE FIX IS HERE**: We read the value directly from st.session_state
-            if st.session_state.job_to_delete:
-                job_to_delete_display = st.session_state.job_to_delete
+            if job_to_delete_display:
                 job_id = jobs_df[jobs_df['display'] == job_to_delete_display]['id'].iloc[0]
                 with sqlite3.connect(DB_NAME) as conn:
                     conn.execute("PRAGMA foreign_keys = ON")
                     conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
                     conn.commit()
-                st.success(f"Deleted '{job_to_delete_display}' successfully!")
-                st.rerun()
+                st.success(f"Deleted '{job_to_delete_display}' successfully! Refresh the page to see the updated list.")
+                # REMOVED st.rerun()
     else:
         st.info("No jobs to delete.")
 
@@ -45,19 +42,16 @@ try:
     # --- Delete Resume Section ---
     if not resumes_df.empty:
         st.subheader("Delete a Resume")
-        st.selectbox("Select Resume", options=resumes_df['display'], key="resume_to_delete", index=None, placeholder="Choose a resume to delete...")
-
+        resume_to_delete_display = st.selectbox("Select Resume", options=resumes_df['display'], key="resume_to_delete", index=None, placeholder="Choose a resume to delete...")
         if st.button("Delete Resume"):
-            # **THE FIX IS HERE**: We read the value directly from st.session_state
-            if st.session_state.resume_to_delete:
-                resume_to_delete_display = st.session_state.resume_to_delete
+            if resume_to_delete_display:
                 resume_id = resumes_df[resumes_df['display'] == resume_to_delete_display]['id'].iloc[0]
                 with sqlite3.connect(DB_NAME) as conn:
                     conn.execute("PRAGMA foreign_keys = ON")
                     conn.execute("DELETE FROM resumes WHERE id = ?", (resume_id,))
                     conn.commit()
-                st.success(f"Deleted '{resume_to_delete_display}' successfully!")
-                st.rerun()
+                st.success(f"Deleted '{resume_to_delete_display}' successfully! Refresh the page to see the updated list.")
+                # REMOVED st.rerun()
     else:
         st.info("No resumes to delete.")
 
