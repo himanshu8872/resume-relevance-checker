@@ -2,113 +2,84 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 
-# At the top of 1_🏠_Dashboard.py
-from database import init_db
-
-# This will create the tables if they don't exist when the app starts
-init_db()
-
 DB_NAME = 'hackathon.db'
 
 st.set_page_config(page_title="Dashboard", layout="wide")
 st.title("📊 Dashboard Overview")
 
+def get_dashboard_data():
+    """Fetches all necessary data for the dashboard in one go."""
+    with sqlite3.connect(DB_NAME) as conn:
+        job_count = conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
+        resume_count = conn.execute("SELECT COUNT(*) FROM resumes").fetchone()[0]
+        evaluation_count = conn.execute("SELECT COUNT(*) FROM evaluations").fetchone()[0]
+        avg_score = conn.execute("SELECT AVG(score) FROM evaluations").fetchone()[0]
+
+        jobs_data = conn.execute("SELECT id, title, company FROM jobs ORDER BY id DESC LIMIT 5").fetchall()
+        jobs_df = pd.DataFrame(jobs_data, columns=['id', 'title', 'company'])
+        if not jobs_df.empty:
+            jobs_df['display'] = jobs_df['title'] + " at " + jobs_df.get('company', '')
+
+        resumes_data = conn.execute("SELECT id, candidate_name, email FROM resumes ORDER BY id DESC LIMIT 5").fetchall()
+        resumes_df = pd.DataFrame(resumes_data, columns=['id', 'name', 'email'])
+        if not resumes_df.empty:
+            resumes_df['display'] = resumes_df['name']
+
+    stats = {
+        "total_jobs": job_count, "total_resumes": resume_count,
+        "total_evaluations": evaluation_count, "average_score": avg_score if avg_score else 0
+    }
+    return stats, jobs_df, resumes_df
+
 try:
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
+    stats, jobs_df, resumes_df = get_dashboard_data()
 
     # --- Key Metrics ---
-    job_count = cursor.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
-    resume_count = cursor.execute("SELECT COUNT(*) FROM resumes").fetchone()[0]
-    evaluation_count = cursor.execute("SELECT COUNT(*) FROM evaluations").fetchone()[0]
-    avg_score = cursor.execute("SELECT AVG(score) FROM evaluations").fetchone()[0]
-
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Jobs", job_count)
-    col2.metric("Total Resumes", resume_count)
-    col3.metric("Total Evaluations", evaluation_count)
-    col4.metric("Average Score", f"{avg_score if avg_score else 0:.1f}%")
-
+    col1.metric("Total Jobs", stats['total_jobs'])
+    col2.metric("Total Resumes", stats['total_resumes'])
+    col3.metric("Total Evaluations", stats['total_evaluations'])
+    col4.metric("Average Score", f"{stats['average_score']:.1f}%")
     st.divider()
 
     # --- Recent Items Tables ---
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("📄 Recent Job Descriptions")
-        jobs_data = cursor.execute("SELECT id, title, company FROM jobs ORDER BY id DESC LIMIT 5").fetchall()
-        if jobs_data:
-            jobs_df = pd.DataFrame(jobs_data, columns=['id', 'title', 'company'])
-            # ADD THIS LINE BACK IN
-            jobs_df['display'] = jobs_df['title'] + " at " + jobs_df.get('company', '')
-            st.dataframe(jobs_df, use_container_width=True)
-        else:
-            st.info("No jobs have been added yet.")
-
+        st.dataframe(jobs_df, use_container_width=True)
     with col2:
         st.subheader("👤 Recent Resumes")
-        resumes_data = cursor.execute("SELECT id, candidate_name, email FROM resumes ORDER BY id DESC LIMIT 5").fetchall()
-        if resumes_data:
-            resumes_df = pd.DataFrame(resumes_data, columns=['id', 'name', 'email'])
-            # AND ADD THIS LINE BACK IN
-            resumes_df['display'] = resumes_df['name']
-            st.dataframe(resumes_df, use_container_width=True)
-        else:
-            st.info("No resumes have been added yet.")
+        st.dataframe(resumes_df, use_container_width=True)
 
-    conn.close()
-
-except sqlite3.OperationalError as e:
-    st.error(f"Database error: {e}. It's possible the database file doesn't exist yet. Please go to the 'Upload' page to add data.")
-except Exception as e:
-    st.error(f"An unexpected error occurred: {e}")
-
-
-# In 1_🏠_Dashboard.py, replace the Danger Zone section with this final version
-
-st.divider()
-st.subheader("⚠️ Danger Zone")
-
-col1, col2 = st.columns(2)
-with col1:
-    if 'jobs_df' in locals() and jobs_df is not None and not jobs_df.empty:
-        st.write("Delete a Job Description")
-        # The key 'job_select_key' will store the selection in session_state
-        st.selectbox("Select Job", options=jobs_df['display'], key="job_select_key", index=None, placeholder="Choose a job to delete...")
-
-        if st.button("Delete Job"):
-            # We now access the value directly from st.session_state
-            job_to_delete_display = st.session_state.job_select_key
-            if job_to_delete_display:
-                job_id = jobs_df[jobs_df['display'] == job_to_delete_display]['id'].iloc[0]
-                try:
-                    conn = sqlite3.connect(DB_NAME)
-                    conn.execute("PRAGMA foreign_keys = ON")
-                    conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
-                    conn.commit()
-                    conn.close()
+    # --- Danger Zone ---
+    st.divider()
+    st.subheader("⚠️ Danger Zone")
+    del_col1, del_col2 = st.columns(2)
+    with del_col1:
+        if not jobs_df.empty:
+            st.write("Delete a Job Description")
+            job_to_delete_display = st.selectbox("Select Job", options=jobs_df['display'], key="job_select_key", index=None, placeholder="Choose a job...")
+            if st.button("Delete Job"):
+                if job_to_delete_display:
+                    job_id = jobs_df[jobs_df['display'] == job_to_delete_display]['id'].iloc[0]
+                    with sqlite3.connect(DB_NAME) as conn:
+                        conn.execute("PRAGMA foreign_keys = ON")
+                        conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+                        conn.commit()
                     st.success(f"Deleted '{job_to_delete_display}' successfully!")
                     st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to delete job: {e}")
-
-with col2:
-    if 'resumes_df' in locals() and resumes_df is not None and not resumes_df.empty:
-        st.write("Delete a Resume")
-        # The key 'resume_select_key' will store the selection in session_state
-        st.selectbox("Select Resume", options=resumes_df['display'], key="resume_select_key", index=None, placeholder="Choose a resume to delete...")
-
-        if st.button("Delete Resume"):
-            # We now access the value directly from st.session_state
-            resume_to_delete_display = st.session_state.resume_select_key
-            if resume_to_delete_display:
-                resume_id = resumes_df[resumes_df['display'] == resume_to_delete_display]['id'].iloc[0]
-                try:
-                    conn = sqlite3.connect(DB_NAME)
-                    conn.execute("PRAGMA foreign_keys = ON")
-                    conn.execute("DELETE FROM resumes WHERE id = ?", (resume_id,))
-                    conn.commit()
-                    conn.close()
+    with del_col2:
+        if not resumes_df.empty:
+            st.write("Delete a Resume")
+            resume_to_delete_display = st.selectbox("Select Resume", options=resumes_df['display'], key="resume_select_key", index=None, placeholder="Choose a resume...")
+            if st.button("Delete Resume"):
+                if resume_to_delete_display:
+                    resume_id = resumes_df[resumes_df['display'] == resume_to_delete_display]['id'].iloc[0]
+                    with sqlite3.connect(DB_NAME) as conn:
+                        conn.execute("PRAGMA foreign_keys = ON")
+                        conn.execute("DELETE FROM resumes WHERE id = ?", (resume_id,))
+                        conn.commit()
                     st.success(f"Deleted '{resume_to_delete_display}' successfully!")
                     st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to delete resume: {e}")
+except Exception as e:
+    st.error(f"An error occurred: {e}. Please try refreshing the page.")
