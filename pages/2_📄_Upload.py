@@ -3,6 +3,7 @@ import sqlite3
 import os
 import sys
 
+os.makedirs("uploads", exist_ok=True)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from parser import parse_resume
 
