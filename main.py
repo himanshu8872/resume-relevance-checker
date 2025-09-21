@@ -1,26 +1,6 @@
 # main.py - UPGRADED VERSION
 # In main.py, add this helper function near the top
-import re
 
-# In main.py, replace the old parse_analysis function with this one
-
-def parse_analysis(analysis_text):
-    score = 0.0
-    verdict = "Not Found"
-    try:
-        # CORRECTED REGEX: Looks for asterisks around the label
-        score_match = re.search(r"\*\*Relevance Score:\*\*\s*(\d{1,3})%", analysis_text)
-        if score_match:
-            score = float(score_match.group(1))
-
-        # CORRECTED REGEX: Looks for asterisks around the label
-        verdict_match = re.search(r"\*\*Verdict:\*\*\s*(High Suitability|Medium Suitability|Low Suitability)", analysis_text)
-        if verdict_match:
-            verdict = verdict_match.group(1)
-    except Exception as e:
-        print(f"Error parsing analysis text: {e}")
-
-    return score, verdict
 
 import os
 import sqlite3
