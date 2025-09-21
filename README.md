@@ -2,7 +2,7 @@
 
 A full-stack web application built for the Innomatics Research Labs Hackathon to automate the resume evaluation process.
 
-**[Live Application URL Will Go Here]**
+**[https://resume-relevance-checker-ngkya7s8ixqhae59hpdjrp.streamlit.app/]**
 
 ---
 
@@ -85,4 +85,6 @@ To run this project locally, please follow these steps:
 ---
 
 ## 👥 Team Members
-* [Your Full Name]
+* [Team Lead :- Himanshu Nandkishor Mahajan]
+* [Team Member :- Aakash Pradeep Patil]
+* [Team Member :- Bhushan Sanjay Desale]
