@@ -1,0 +1,16 @@
+# Environment variables - VERY IMPORTANT
+.env
+
+# Virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Database file
+hackathon.db
+*.db
+
+# Temporary upload folder
+uploads/
