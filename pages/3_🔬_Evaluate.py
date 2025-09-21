@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from app.analyzer import get_gemini_response, parse_analysis
+from analyzer import get_gemini_response, parse_analysis
 
 DB_NAME = 'hackathon.db'
 
