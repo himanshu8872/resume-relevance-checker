@@ -7,53 +7,58 @@ st.set_page_config(page_title="Delete Data", layout="centered")
 st.title("⚠️ Delete Data")
 st.warning("Warning: Deleting a job or resume will also delete all of its associated evaluations permanently.")
 
+def delete_job(job_id):
+    with sqlite3.connect(DB_NAME) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+        conn.commit()
+    st.success("Job deleted successfully!")
+
+def delete_resume(resume_id):
+    with sqlite3.connect(DB_NAME) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("DELETE FROM resumes WHERE id = ?", (resume_id,))
+        conn.commit()
+    st.success("Resume deleted successfully!")
+
 try:
     with sqlite3.connect(DB_NAME) as conn:
         jobs_data = conn.execute("SELECT id, title, company FROM jobs").fetchall()
-        jobs_df = pd.DataFrame(jobs_data, columns=['id', 'title', 'company'])
-        if not jobs_df.empty:
-            jobs_df['display'] = jobs_df['title'] + " at " + jobs_df['company']
-
         resumes_data = conn.execute("SELECT id, candidate_name FROM resumes").fetchall()
-        resumes_df = pd.DataFrame(resumes_data, columns=['id', 'name'])
-        if not resumes_df.empty:
-            resumes_df['display'] = resumes_df['name']
 
     st.divider()
-
+    
     # --- Delete Job Section ---
-    if not jobs_df.empty:
-        st.subheader("Delete a Job Description")
-        job_to_delete_display = st.selectbox("Select Job", options=jobs_df['display'], key="job_to_delete", index=None, placeholder="Choose a job to delete...")
-        if st.button("Delete Job"):
-            if job_to_delete_display:
-                job_id = jobs_df[jobs_df['display'] == job_to_delete_display]['id'].iloc[0]
-                with sqlite3.connect(DB_NAME) as conn:
-                    conn.execute("PRAGMA foreign_keys = ON")
-                    conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
-                    conn.commit()
-                st.success(f"Deleted '{job_to_delete_display}' successfully! Refresh the page to see the updated list.")
-                # REMOVED st.rerun()
-    else:
+    st.subheader("Delete a Job Description")
+    if not jobs_data:
         st.info("No jobs to delete.")
+    else:
+        for job_id, title, company in jobs_data:
+            col1, col2 = st.columns([0.8, 0.2])
+            with col1:
+                st.text(f"{title} at {company}")
+            with col2:
+                # Each button has a unique key to identify the specific job
+                if st.button("Delete", key=f"job_{job_id}"):
+                    delete_job(job_id)
+                    st.rerun()
 
     st.divider()
 
     # --- Delete Resume Section ---
-    if not resumes_df.empty:
-        st.subheader("Delete a Resume")
-        resume_to_delete_display = st.selectbox("Select Resume", options=resumes_df['display'], key="resume_to_delete", index=None, placeholder="Choose a resume to delete...")
-        if st.button("Delete Resume"):
-            if resume_to_delete_display:
-                resume_id = resumes_df[resumes_df['display'] == resume_to_delete_display]['id'].iloc[0]
-                with sqlite3.connect(DB_NAME) as conn:
-                    conn.execute("PRAGMA foreign_keys = ON")
-                    conn.execute("DELETE FROM resumes WHERE id = ?", (resume_id,))
-                    conn.commit()
-                st.success(f"Deleted '{resume_to_delete_display}' successfully! Refresh the page to see the updated list.")
-                # REMOVED st.rerun()
-    else:
+    st.subheader("Delete a Resume")
+    if not resumes_data:
         st.info("No resumes to delete.")
+    else:
+        for resume_id, name in resumes_data:
+            col1, col2 = st.columns([0.8, 0.2])
+            with col1:
+                st.text(name)
+            with col2:
+                # Each button has a unique key to identify the specific resume
+                if st.button("Delete", key=f"resume_{resume_id}"):
+                    delete_resume(resume_id)
+                    st.rerun()
 
 except Exception as e:
     st.error(f"An error occurred: {e}")
