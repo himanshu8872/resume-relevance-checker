@@ -2,6 +2,12 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 
+# At the top of 1_🏠_Dashboard.py
+from database import init_db
+
+# This will create the tables if they don't exist when the app starts
+init_db()
+
 DB_NAME = 'hackathon.db'
 
 st.set_page_config(page_title="Dashboard", layout="wide")
