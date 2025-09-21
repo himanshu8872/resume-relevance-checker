@@ -62,9 +62,8 @@ except sqlite3.OperationalError as e:
 except Exception as e:
     st.error(f"An unexpected error occurred: {e}")
 
-# In 1_🏠_Dashboard.py, add this at the very end
 
-# In 1_🏠_Dashboard.py, replace the Danger Zone section with this
+# In 1_🏠_Dashboard.py, replace the Danger Zone section with this final version
 
 st.divider()
 st.subheader("⚠️ Danger Zone")
@@ -73,10 +72,12 @@ col1, col2 = st.columns(2)
 with col1:
     if 'jobs_df' in locals() and jobs_df is not None and not jobs_df.empty:
         st.write("Delete a Job Description")
-        # The selectbox now uses a key to hold its state
-        job_to_delete_display = st.selectbox("Select Job", options=jobs_df['display'], key="job_select")
+        # The key 'job_select_key' will store the selection in session_state
+        st.selectbox("Select Job", options=jobs_df['display'], key="job_select_key", index=None, placeholder="Choose a job to delete...")
 
         if st.button("Delete Job"):
+            # We now access the value directly from st.session_state
+            job_to_delete_display = st.session_state.job_select_key
             if job_to_delete_display:
                 job_id = jobs_df[jobs_df['display'] == job_to_delete_display]['id'].iloc[0]
                 try:
@@ -93,10 +94,12 @@ with col1:
 with col2:
     if 'resumes_df' in locals() and resumes_df is not None and not resumes_df.empty:
         st.write("Delete a Resume")
-        # The selectbox now uses a key to hold its state
-        resume_to_delete_display = st.selectbox("Select Resume", options=resumes_df['display'], key="resume_select")
+        # The key 'resume_select_key' will store the selection in session_state
+        st.selectbox("Select Resume", options=resumes_df['display'], key="resume_select_key", index=None, placeholder="Choose a resume to delete...")
 
         if st.button("Delete Resume"):
+            # We now access the value directly from st.session_state
+            resume_to_delete_display = st.session_state.resume_select_key
             if resume_to_delete_display:
                 resume_id = resumes_df[resumes_df['display'] == resume_to_delete_display]['id'].iloc[0]
                 try:
