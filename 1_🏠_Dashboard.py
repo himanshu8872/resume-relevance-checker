@@ -56,46 +56,5 @@ try:
         st.subheader("👤 Recent Resumes")
         st.dataframe(resumes_df[['id', 'name', 'email']], use_container_width=True) # Hide 'display' column from view
     
-    # --- Danger Zone (Corrected with matching Session State Keys) ---
-    st.divider()
-    st.subheader("⚠️ Danger Zone")
-    del_col1, del_col2 = st.columns(2)
-
-    with del_col1:
-        if not jobs_df.empty:
-            st.write("Delete a Job Description")
-            # CORRECTED: The key is now 'job_to_delete'
-            st.selectbox("Select Job", options=jobs_df['display'], key="job_to_delete", index=None, placeholder="Choose a job...")
-            
-            if st.button("Delete Job"):
-                # CORRECTED: We read from the same key, 'job_to_delete'
-                job_to_delete_display = st.session_state.job_to_delete
-                if job_to_delete_display:
-                    job_id = jobs_df[jobs_df['display'] == job_to_delete_display]['id'].iloc[0]
-                    with sqlite3.connect(DB_NAME) as conn:
-                        conn.execute("PRAGMA foreign_keys = ON")
-                        conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
-                        conn.commit()
-                    st.success(f"Deleted '{job_to_delete_display}' successfully!")
-                    st.rerun()
-
-    with del_col2:
-        if not resumes_df.empty:
-            st.write("Delete a Resume")
-            # CORRECTED: The key is now 'resume_to_delete'
-            st.selectbox("Select Resume", options=resumes_df['display'], key="resume_to_delete", index=None, placeholder="Choose a resume...")
-            
-            if st.button("Delete Resume"):
-                # CORRECTED: We read from the same key, 'resume_to_delete'
-                resume_to_delete_display = st.session_state.resume_to_delete
-                if resume_to_delete_display:
-                    resume_id = resumes_df[resumes_df['display'] == resume_to_delete_display]['id'].iloc[0]
-                    with sqlite3.connect(DB_NAME) as conn:
-                        conn.execute("PRAGMA foreign_keys = ON")
-                        conn.execute("DELETE FROM resumes WHERE id = ?", (resume_id,))
-                        conn.commit()
-                    st.success(f"Deleted '{resume_to_delete_display}' successfully!")
-                    st.rerun()
-
 except Exception as e:
-    st.error(f"An error occurred: {e}. Please go to the 'Upload' page to add data.")
+    st.error(f"An error occurred while loading the dashboard: {e}")
