@@ -14,7 +14,7 @@ def get_gemini_response(resume_text, jd_text):
             raise ValueError("GOOGLE_API_KEY not found. Please set it in your secrets.")
 
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        model = genai.GenerativeModel('gemini-pro')
     except Exception as e:
         return f"Error configuring the AI model: {e}"
 
